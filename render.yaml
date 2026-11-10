@@ -1,0 +1,21 @@
+# Render Blueprint: deploys GuardRail Shopper as a free web service.
+# Secrets are NOT stored here; Render asks for them when the Blueprint is created.
+services:
+  - type: web
+    name: guardrail-shopper
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/state
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

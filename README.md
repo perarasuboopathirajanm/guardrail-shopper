@@ -32,6 +32,14 @@ npm test               # rules-engine tests
 
 **No keys?** It still runs. Without PayPal keys a clearly-labelled mock checkout page stands in for PayPal. Without an Anthropic key a simple keyword agent runs instead of Claude. The header shows which mode is active.
 
+## Deploy (Render)
+
+1. Fork or connect this repo on [render.com](https://render.com) via **New → Blueprint**.
+2. Render reads `render.yaml` and asks for `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` and `GROQ_API_KEY`.
+3. The public URL is picked up automatically (`RENDER_EXTERNAL_URL`) for PayPal return URLs.
+
+The free tier sleeps after inactivity, so the first request can take about a minute.
+
 ## Layout
 
 - `server.js` Express API and PayPal return/webhook routes

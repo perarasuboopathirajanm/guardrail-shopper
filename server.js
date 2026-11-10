@@ -9,7 +9,8 @@ import { createOrder, captureOrder, verifyWebhook, paypalLive } from './paypal.j
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+// On Render, RENDER_EXTERNAL_URL is the public https address; PayPal needs it for return URLs.
+const BASE_URL = (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
 const sid = () => 'demo'; // single shared demo session
 
 const app = express();
