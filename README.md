@@ -7,7 +7,7 @@ Built for the PayPal AI Hackathon (Agentic Commerce).
 ## How it works
 
 1. You chat: "find a gift under $30".
-2. The agent (Claude, with tool use) searches the catalog and calls `propose_purchase`.
+2. The agent (Groq `openai/gpt-oss-120b` with tool calling; Claude is an optional fallback) searches the catalog and calls `propose_purchase`.
 3. `guardrails.js` decides, outside the model's control:
    - **blocked**: blocked category, over the per-purchase cap, or over budget
    - **needs approval**: above the auto-approve limit, so you click Approve
@@ -30,7 +30,7 @@ npm test               # rules-engine tests
 | `GROQ_API_KEY` (free tier; default model `openai/gpt-oss-120b`) | console.groq.com/keys |
 | `ANTHROPIC_API_KEY` (used only if no Groq key) | console.anthropic.com |
 
-**No keys?** It still runs. Without PayPal keys a clearly-labelled mock checkout page stands in for PayPal. Without an Anthropic key a simple keyword agent runs instead of Claude. The header shows which mode is active.
+**No keys?** It still runs. Without PayPal keys a clearly-labelled mock checkout page stands in for PayPal. With neither a Groq nor an Anthropic key, a simple keyword agent runs instead of the AI model. The header shows which mode is active.
 
 ## Deploy (Render)
 
@@ -43,7 +43,7 @@ The free tier sleeps after inactivity, so the first request can take about a min
 ## Layout
 
 - `server.js` Express API and PayPal return/webhook routes
-- `agent.js` Claude tool-use loop (plus the no-key demo agent)
+- `agent.js` AI tool-calling loop on Groq (Claude fallback, plus the no-key demo agent)
 - `guardrails.js` spending rules engine (unit tested)
 - `paypal.js` PayPal Orders v2 + webhook verification
 - `catalog.js` mock product catalog (swap for a real product API)
