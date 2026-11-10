@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>GuardRail Shopper</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<style>
+  :root{
+    --bg:#FFFFFF; --surface:#FFFFFF; --ink:#001435; --mute:#5b6b83; --line:#DADDE1;
+    --sk1:#EEEEEE; --sk2:#DADDE1;
+    --pay:#00457C; --pal:#0079C1; --pal-tint:#EAF4FB;
+    --ok:#1b6b4a; --warn:#8a5a00; --bad:#a3322a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  header{padding:16px 24px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  h1{font-size:18px;margin:0 8px 0 0;color:var(--pay);letter-spacing:-.01em}
+  h1{display:flex;align-items:center;gap:8px}
+  h1 img{display:block}
+  h1 span{color:var(--pal)}
+  .pill{font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+  .pill.live{color:var(--pay);border-color:var(--pal);background:var(--pal-tint)}
+  main{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;padding:24px;max-width:1200px;margin:0 auto}
+  @media(max-width:860px){main{grid-template-columns:1fr;padding:16px}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:24px}
+  h2{font-size:12px;margin:0 0 12px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+  /* chat */
+  #chat{height:300px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .msg{padding:9px 12px;border-radius:10px;max-width:90%;white-space:pre-wrap}
+  .user{align-self:flex-end;background:var(--pay);color:#fff}
+  .agent{background:var(--bg);border:1px solid var(--line)}
+  form{display:flex;gap:8px}
+  input,button{font:inherit}
+  input[type=text],input[type=number]{flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);min-width:0}
+  input:focus-visible,button:focus-visible{outline:2px solid var(--pal);outline-offset:1px}
+  button{padding:9px 16px;border:1px solid var(--pay);border-radius:8px;background:var(--pay);color:#fff;cursor:pointer;transition:background .15s}
+  button:hover:not(:disabled){background:#003561}
+  button.ghost{background:#fff;color:var(--pay);border-color:var(--line)}
+  button.ghost:hover:not(:disabled){background:var(--pal-tint);border-color:var(--pal)}
+  button:disabled{opacity:.55;cursor:default}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chips button{font-size:12px;padding:5px 11px}
+
+  /* rules */
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rules label{font-size:12px;color:var(--mute);display:block;margin-bottom:3px}
+  .rules .wide{grid-column:1/-1}
+  .bar{height:6px;border-radius:99px;background:var(--sk1);overflow:hidden;margin:14px 0 6px}
+  .bar i{display:block;height:100%;background:var(--pal);transition:width .3s}
+
+  /* proposals + audit */
+  .prop{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+  .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .badge{font-size:11px;padding:2px 9px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+  .b-approved,.b-paid{color:var(--ok)} .b-pending_approval{color:var(--warn)} .b-rejected{color:var(--bad)} .b-awaiting_payment{color:var(--pal)}
+  .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap} .why{font-size:12.5px;color:var(--mute);margin-top:4px}
+  #audit{max-height:260px;overflow:auto;font-size:12.5px}
+  .ev{padding:5px 0;border-bottom:1px solid var(--sk1)}
+  .t{color:var(--mute);margin-right:6px}
+  .k-blocked,.k-error,.k-webhook_rejected{color:var(--bad)} .k-needs_approval{color:var(--warn)} .k-auto_approved,.k-paid{color:var(--ok)}
+  .empty,.why#budgetText{color:var(--mute);font-size:13px}
+
+  /* skeleton loader */
+  .sk{display:block;border-radius:6px;background:linear-gradient(90deg,var(--sk1) 0%,var(--sk2) 50%,var(--sk1) 100%);background-size:200% 100%;animation:shimmer 1.3s ease-in-out infinite}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @media (prefers-reduced-motion:reduce){.sk{animation:none}}
+  .sk-line{height:12px;margin:8px 0}.sk-title{height:16px;width:60%;margin:2px 0 10px}
+  .sk-badge{height:18px;width:80px;border-radius:99px}.sk-btn{height:32px;width:120px;border-radius:8px}
+  .msg.sk-msg{width:70%;background:var(--bg);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1><img src="/logo.svg" alt="GuardRail Shopper" width="40" height="40"></h1>
+  <span class="pill" id="aiMode">AI …</span><span class="pill" id="ppMode">PayPal …</span>
+  <span class="pill" id="flash" style="display:none"></span>
+  <button class="ghost" id="reset" style="margin-left:auto;padding:6px 12px;font-size:13px">Reset demo</button>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <h2>Ask the agent</h2>
+      <div id="chat" aria-live="polite"><div class="msg agent">Tell me what to buy, e.g. “a gift under $40” or “something for my home office”. I’ll stay inside your spending rules.</div></div>
+      <form id="chatForm"><input id="msg" type="text" placeholder="What should I buy?" autocomplete="off" aria-label="What should I buy?"><button id="send">Send</button></form>
+      <div class="chips">
+        <button class="ghost" data-q="Find a nice gift under $30">Gift under $30</button>
+        <button class="ghost" data-q="Get me a good coffee kit">Coffee kit</button>
+        <button class="ghost" data-q="Buy a premium whisky gift pack">Try a blocked item</button>
+        <button class="ghost" data-q="Get me a mechanical keyboard">Over the cap</button>
+      </div>
+    </div>
+    <div class="card"><h2>Proposed purchases</h2>
+      <div id="props" aria-busy="true"></div>
+    </div>
+  </section>
+  <section>
+    <div class="card">
+      <h2>Spending rules</h2>
+      <div class="rules">
+        <div><label for="r_budget">Total budget ($)</label><input type="number" id="r_budget" min="0" step="1"></div>
+        <div><label for="r_perItemMax">Max per purchase ($)</label><input type="number" id="r_perItemMax" min="0" step="1"></div>
+        <div><label for="r_approvalThreshold">Auto-approve up to ($)</label><input type="number" id="r_approvalThreshold" min="0" step="1"></div>
+        <div><label for="r_blocked">Blocked categories</label><input type="text" id="r_blocked"></div>
+        <div class="wide"><button id="saveRules" class="ghost">Save rules</button></div>
+      </div>
+      <div class="bar"><i id="barFill" style="width:0"></i></div>
+      <div id="budgetText" class="why"><span class="sk sk-line" style="width:55%"></span></div>
+    </div>
+    <div class="card"><h2>Audit log</h2><div id="audit" aria-busy="true"></div></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const money = (n) => '$' + Number(n).toFixed(2);
+let busy = false;
+
+// ---- skeleton loaders -------------------------------------------------------
+const sk = (cls, style = '') => `<span class="sk ${cls}" style="${style}"></span>`;
+const propSkeleton = () => `<div class="prop sk-prop"><div class="row">${sk('sk-title')}${sk('sk-badge')}</div>${sk('sk-line', 'width:90%')}${sk('sk-line', 'width:65%')}<div class="acts">${sk('sk-btn')}${sk('sk-btn', 'width:80px')}</div></div>`;
+const auditSkeleton = (n = 5) => Array.from({ length: n }, (_, i) => `<div class="ev">${sk('sk-line', `width:${90 - i * 9}%;margin:3px 0`)}</div>`).join('');
+$('props').innerHTML = propSkeleton() + propSkeleton();
+$('audit').innerHTML = auditSkeleton();
+
+function showAgentThinking() {
+  const d = document.createElement('div'); d.className = 'msg sk-msg'; d.id = 'thinking';
+  d.innerHTML = sk('sk-line', 'width:90%;margin:4px 0') + sk('sk-line', 'width:60%;margin:4px 0');
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+  const props = $('props');
+  if (props.querySelector('.empty')) props.replaceChildren();
+  props.insertAdjacentHTML('afterbegin', propSkeleton());
+}
+function clearThinking() {
+  $('thinking')?.remove();
+  document.querySelectorAll('.sk-prop').forEach((e) => e.remove());
+}
+
+// ---- api + render -----------------------------------------------------------
+async function api(url, body) {
+  const res = await fetch(url, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok && !json.error) json.error = res.statusText;
+  return json;
+}
+function say(text, who) {
+  const d = document.createElement('div'); d.className = 'msg ' + who; d.textContent = text;
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+function render(s) {
+  if (!s || !s.rules) return;
+  const r = s.rules;
+  if (document.activeElement.tagName !== 'INPUT') {
+    $('r_budget').value = r.budget; $('r_perItemMax').value = r.perItemMax;
+    $('r_approvalThreshold').value = r.approvalThreshold; $('r_blocked').value = r.blockedCategories.join(', ');
+  }
+  const pct = r.budget ? Math.min(100, s.committed / r.budget * 100) : 0;
+  $('barFill').style.width = pct + '%';
+  $('budgetText').textContent = `${money(s.committed)} committed of ${money(r.budget)} (${money(Math.max(0, r.budget - s.committed))} left)`;
+
+  const box = $('props'); box.replaceChildren(); box.setAttribute('aria-busy', 'false');
+  if (!s.proposals.length) box.innerHTML = '<div class="empty">Nothing yet. Ask the agent to find something.</div>';
+  for (const p of [...s.proposals].reverse()) {
+    const el = document.createElement('div'); el.className = 'prop';
+    const head = document.createElement('div'); head.className = 'row';
+    const title = document.createElement('b'); title.textContent = `${p.quantity} × ${p.product.name} — ${money(p.total)}`;
+    const badge = document.createElement('span'); badge.className = 'badge b-' + p.status; badge.textContent = p.status.replace('_', ' ');
+    head.append(title, badge); el.append(head);
+    const why = document.createElement('div'); why.className = 'why'; why.textContent = p.reasons.join(' ') + (p.reason ? ' · ' + p.reason : ''); el.append(why);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    const btn = (label, cls, fn) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; b.onclick = async () => { b.disabled = true; b.textContent = '…'; await fn(); }; acts.append(b); };
+    if (p.status === 'pending_approval') { btn('Approve', '', () => act(p.id, 'approve')); btn('Reject', 'ghost', () => act(p.id, 'reject')); }
+    if (p.status === 'approved') { btn('Pay with PayPal', '', () => checkout(p.id)); btn('Reject', 'ghost', () => act(p.id, 'reject')); }
+    if (acts.children.length) el.append(acts);
+    box.append(el);
+  }
+  const a = $('audit'); a.replaceChildren(); a.setAttribute('aria-busy', 'false');
+  if (!s.audit.length) a.innerHTML = '<div class="empty">No activity yet.</div>';
+  for (const e of [...s.audit].reverse()) {
+    const d = document.createElement('div'); d.className = 'ev k-' + e.type;
+    const t = document.createElement('span'); t.className = 't'; t.textContent = new Date(e.at).toLocaleTimeString();
+    const m = document.createElement('span'); m.textContent = `[${e.type}] ${e.message}`;
+    d.append(t, m); a.append(d);
+  }
+}
+async function act(id, what) { render(await api(`/api/proposals/${id}/${what}`, {})); }
+async function checkout(id) {
+  const out = await api(`/api/proposals/${id}/checkout`, {});
+  if (out.error) { say('⚠️ ' + out.error, 'agent'); return render(await api('/api/state')); }
+  render(out); location.href = out.approveUrl;
+}
+$('chatForm').onsubmit = async (e) => {
+  e.preventDefault(); if (busy) return;
+  const text = $('msg').value.trim(); if (!text) return;
+  busy = true; $('send').disabled = true; $('msg').value = ''; say(text, 'user'); showAgentThinking();
+  const out = await api('/api/chat', { message: text });
+  clearThinking();
+  say(out.reply || out.error || 'No response.', 'agent'); render(out);
+  busy = false; $('send').disabled = false; $('msg').focus();
+};
+document.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { $('msg').value = b.dataset.q; $('chatForm').requestSubmit(); });
+$('reset').onclick = async () => {
+  if (busy) return;
+  const s = await api('/api/reset', {});
+  $('chat').replaceChildren();
+  say('Tell me what to buy, e.g. “a gift under $40” or “something for my home office”. I’ll stay inside your spending rules.', 'agent');
+  render(s);
+};
+$('saveRules').onclick = async () => {
+  render(await api('/api/rules', {
+    budget: $('r_budget').value, perItemMax: $('r_perItemMax').value, approvalThreshold: $('r_approvalThreshold').value,
+    blockedCategories: $('r_blocked').value.split(','),
+  }));
+};
+(async () => {
+  const s = await api('/api/state');
+  $('aiMode').textContent = s.modes.ai ? `AI: ${s.modes.provider} live` : 'AI: demo mode'; $('aiMode').className = 'pill' + (s.modes.ai ? ' live' : '');
+  $('ppMode').textContent = s.modes.paypal ? 'PayPal: sandbox live' : 'PayPal: mock checkout'; $('ppMode').className = 'pill' + (s.modes.paypal ? ' live' : '');
+  render(s);
+  const q = new URLSearchParams(location.search).get('checkout');
+  if (q) { const f = $('flash'); f.style.display = ''; f.textContent = q === 'done' ? 'Payment step finished' : 'Checkout cancelled'; history.replaceState({}, '', '/'); }
+})();
+</script>
+</body>
+</html>

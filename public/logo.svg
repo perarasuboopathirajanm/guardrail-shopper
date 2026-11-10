@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GuardRail Shopper logo">
+  <path d="M32 4 56 13v18c0 15-10 25-24 29C18 56 8 46 8 31V13z" fill="#00457C"/>
+  <path d="M32 4 56 13v18c0 15-10 25-24 29z" fill="#0079C1"/>
+  <path d="M19 27h26l-3 14c-.4 1.8-2 3-3.8 3H25.8c-1.8 0-3.4-1.200-3.800-3z" fill="#FFFFFF"/>
+  <path d="M27 27v-3a5 5 0 0 1 10 0v3" fill="none" stroke="#FFFFFF" stroke-width="2.600" stroke-linecap="round"/>
+  <path d="m27.500 35 3.200 3.200 6-6.500" fill="none" stroke="#00457C" stroke-width="2.800" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
